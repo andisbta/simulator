@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Block Engine — 2D Game Creator</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Toolbar -->
+    <header id="toolbar">
+      <div class="toolbar-left">
+        <span class="logo">◆ Block Engine</span>
+      </div>
+      <div class="toolbar-center">
+        <button class="tb-btn" id="btn-save" title="Save Project">
+          <span class="tb-icon">↓</span> Save
+        </button>
+        <button class="tb-btn" id="btn-load" title="Load Project">
+          <span class="tb-icon">↑</span> Load
+        </button>
+        <div class="tb-divider"></div>
+        <button class="tb-btn tb-btn-play" id="btn-play" title="Play / Stop">
+          <span class="tb-icon" id="play-icon">▶</span> Play
+        </button>
+        <div class="tb-divider"></div>
+        <button class="tb-btn" id="btn-export" title="Export JSON">
+          <span class="tb-icon">⟳</span> Export
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <span class="fps-counter" id="fps-display">60 FPS</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div id="workspace">
+      <!-- Block Sidebar -->
+      <aside id="sidebar">
+        <div class="sidebar-header">Blocks</div>
+        <nav id="block-nav">
+          <button class="block-tab active" data-block="scene">
+            <span class="block-icon">◫</span> Scene
+          </button>
+          <button class="block-tab" data-block="assets">
+            <span class="block-icon">◇</span> Assets
+          </button>
+          <button class="block-tab" data-block="entity">
+            <span class="block-icon">▣</span> Entity
+          </button>
+          <button class="block-tab" data-block="physics">
+            <span class="block-icon">↕</span> Physics
+          </button>
+          <button class="block-tab" data-block="controls">
+            <span class="block-icon">⌨</span> Controls
+          </button>
+          <button class="block-tab" data-block="animation">
+            <span class="block-icon">◑</span> Animation
+          </button>
+          <button class="block-tab" data-block="effects">
+            <span class="block-icon">✦</span> Effects
+          </button>
+          <button class="block-tab" data-block="audio">
+            <span class="block-icon">♪</span> Audio
+          </button>
+          <button class="block-tab" data-block="dialog">
+            <span class="block-icon">▤</span> Dialog
+          </button>
+          <button class="block-tab" data-block="rules">
+            <span class="block-icon">⚡</span> Rules
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Block Panel (parameter dialogs) -->
+      <section id="block-panel">
+        <!-- Scene Block -->
+        <div class="block-content active" data-block="scene">
+          <div class="block-title">Scene</div>
+          <div class="param-group">
+            <label class="param-label">Background</label>
+            <div class="param-row">
+              <input type="color" class="param-color" id="scene-bg" value="#0a0a0f">
+              <span class="param-value" id="scene-bg-val">#0a0a0f</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Grid</label>
+            <div class="param-row">
+              <label class="toggle">
+                <input type="checkbox" id="scene-grid" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="param-hint">Show grid overlay</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Grid Size</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="scene-grid-size" min="16" max="128" value="32" step="8">
+              <span class="param-value" id="scene-grid-size-val">32px</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Grid Color</label>
+            <div class="param-row">
+              <input type="color" class="param-color" id="scene-grid-color" value="#1a1a25">
+              <span class="param-value" id="scene-grid-color-val">#1a1a25</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Canvas Width</label>
+            <div class="param-row">
+              <input type="number" class="param-number" id="scene-width" value="800" min="320" max="1920" step="10">
+              <span class="param-hint">px</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Canvas Height</label>
+            <div class="param-row">
+              <input type="number" class="param-number" id="scene-height" value="500" min="240" max="1080" step="10">
+              <span class="param-hint">px</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assets Block -->
+        <div class="block-content" data-block="assets">
+          <div class="block-title">Assets</div>
+          <div class="param-group">
+            <label class="param-label">Shape</label>
+            <div class="param-row">
+              <select class="param-select" id="asset-shape">
+                <option value="rect">Rectangle</option>
+                <option value="circle">Circle</option>
+                <option value="triangle">Triangle</option>
+                <option value="diamond">Diamond</option>
+                <option value="hexagon">Hexagon</option>
+                <option value="star">Star</option>
+              </select>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Size</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="asset-size" min="8" max="128" value="32" step="4">
+              <span class="param-value" id="asset-size-val">32px</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Fill Color</label>
+            <div class="param-row">
+              <input type="color" class="param-color" id="asset-fill" value="#4a9eff">
+              <span class="param-value" id="asset-fill-val">#4a9eff</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Stroke</label>
+            <div class="param-row">
+              <label class="toggle">
+                <input type="checkbox" id="asset-stroke" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="param-hint">Show outline</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Stroke Color</label>
+            <div class="param-row">
+              <input type="color" class="param-color" id="asset-stroke-color" value="#e8e8e8">
+              <span class="param-value" id="asset-stroke-color-val">#e8e8e8</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Stroke Width</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="asset-stroke-width" min="0" max="6" value="1" step="0.5">
+              <span class="param-value" id="asset-stroke-width-val">1px</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Opacity</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="asset-opacity" min="0" max="1" value="1" step="0.05">
+              <span class="param-value" id="asset-opacity-val">1.0</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Style Seed</label>
+            <div class="param-row">
+              <input type="number" class="param-number" id="asset-seed" value="42" min="0" max="9999">
+              <button class="param-btn-small" id="asset-seed-rand">Random</button>
+            </div>
+          </div>
+          <div class="asset-preview-box">
+            <div class="param-label">Preview</div>
+            <canvas id="asset-preview" width="120" height="120"></canvas>
+          </div>
+        </div>
+
+        <!-- Entity Block -->
+        <div class="block-content" data-block="entity">
+          <div class="block-title">Entity</div>
+          <div class="param-group">
+            <label class="param-label">Entities</label>
+            <div class="entity-list" id="entity-list">
+              <div class="entity-item active" data-id="player">
+                <span class="entity-dot" style="background:#4a9eff"></span>
+                Player
+              </div>
+            </div>
+            <button class="param-btn" id="entity-add">+ Add Entity</button>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Name</label>
+            <div class="param-row">
+              <input type="text" class="param-text" id="entity-name" value="Player">
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Position X</label>
+            <div class="param-row">
+              <input type="number" class="param-number" id="entity-x" value="400" step="1">
+              <span class="param-hint">px</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Position Y</label>
+            <div class="param-row">
+              <input type="number" class="param-number" id="entity-y" value="250" step="1">
+              <span class="param-hint">px</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Layer</label>
+            <div class="param-row">
+              <input type="number" class="param-number" id="entity-layer" value="1" min="0" max="10">
+              <span class="param-hint">0 = back, 10 = front</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Tag</label>
+            <div class="param-row">
+              <select class="param-select" id="entity-tag">
+                <option value="player">Player</option>
+                <option value="enemy">Enemy</option>
+                <option value="item">Item</option>
+                <option value="platform">Platform</option>
+                <option value="trigger">Trigger</option>
+                <option value="decoration">Decoration</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Physics Block -->
+        <div class="block-content" data-block="physics">
+          <div class="block-title">Physics</div>
+          <div class="param-group">
+            <label class="param-label">Enable</label>
+            <div class="param-row">
+              <label class="toggle">
+                <input type="checkbox" id="phys-enable" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Gravity</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="phys-gravity" min="0" max="2000" value="980" step="10">
+              <span class="param-value" id="phys-gravity-val">980</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Friction</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="phys-friction" min="0" max="1" value="0.1" step="0.01">
+              <span class="param-value" id="phys-friction-val">0.10</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Bounce</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="phys-bounce" min="0" max="1" value="0.3" step="0.05">
+              <span class="param-value" id="phys-bounce-val">0.30</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Mass</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="phys-mass" min="0.1" max="20" value="1" step="0.1">
+              <span class="param-value" id="phys-mass-val">1.0</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Collision</label>
+            <div class="param-row">
+              <select class="param-select" id="phys-collision">
+                <option value="aabb">Box (AABB)</option>
+                <option value="circle">Circle</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Block -->
+        <div class="block-content" data-block="controls">
+          <div class="block-title">Controls</div>
+          <div class="param-group">
+            <label class="param-label">Movement</label>
+            <div class="param-row">
+              <select class="param-select" id="ctrl-mode">
+                <option value="topdown">Top-Down (4-dir)</option>
+                <option value="platformer">Platformer</option>
+                <option value="free">Free Movement</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Speed</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="ctrl-speed" min="50" max="800" value="200" step="10">
+              <span class="param-value" id="ctrl-speed-val">200</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Jump Height</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="ctrl-jump" min="0" max="800" value="400" step="10">
+              <span class="param-value" id="ctrl-jump-val">400</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Dash</label>
+            <div class="param-row">
+              <label class="toggle">
+                <input type="checkbox" id="ctrl-dash">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="param-hint">Shift to dash</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Animation Block -->
+        <div class="block-content" data-block="animation">
+          <div class="block-title">Animation</div>
+          <div class="param-group">
+            <label class="param-label">Idle Animation</label>
+            <div class="param-row">
+              <select class="param-select" id="anim-idle">
+                <option value="none">None</option>
+                <option value="pulse" selected>Pulse</option>
+                <option value="breathe">Breathe</option>
+                <option value="float">Float</option>
+                <option value="rotate">Rotate</option>
+              </select>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Animation Speed</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="anim-speed" min="0.1" max="5" value="1" step="0.1">
+              <span class="param-value" id="anim-speed-val">1.0x</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Easing</label>
+            <div class="param-row">
+              <select class="param-select" id="anim-easing">
+                <option value="linear">Linear</option>
+                <option value="ease-in">Ease In</option>
+                <option value="ease-out" selected>Ease Out</option>
+                <option value="ease-in-out">Ease In-Out</option>
+                <option value="bounce">Bounce</option>
+              </select>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Loop</label>
+            <div class="param-row">
+              <label class="toggle">
+                <input type="checkbox" id="anim-loop" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="param-hint">Repeat animation</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Effects Block -->
+        <div class="block-content" data-block="effects">
+          <div class="block-title">Effects</div>
+          <div class="param-group">
+            <label class="param-label">Particles</label>
+            <div class="param-row">
+              <label class="toggle">
+                <input type="checkbox" id="fx-particles">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="param-hint">Emit particles</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Particle Count</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="fx-count" min="1" max="100" value="20" step="1">
+              <span class="param-value" id="fx-count-val">20</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Particle Lifetime</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="fx-lifetime" min="0.1" max="5" value="1" step="0.1">
+              <span class="param-value" id="fx-lifetime-val">1.0s</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Particle Color</label>
+            <div class="param-row">
+              <input type="color" class="param-color" id="fx-color" value="#4a9eff">
+              <span class="param-value" id="fx-color-val">#4a9eff</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Screen Shake</label>
+            <div class="param-row">
+              <label class="toggle">
+                <input type="checkbox" id="fx-shake">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="param-hint">On collision</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audio Block -->
+        <div class="block-content" data-block="audio">
+          <div class="block-title">Audio</div>
+          <div class="param-group">
+            <label class="param-label">Sound Type</label>
+            <div class="param-row">
+              <select class="param-select" id="audio-type">
+                <option value="jump">Jump</option>
+                <option value="hit">Hit</option>
+                <option value="pickup">Pickup</option>
+                <option value="blip">Blip</option>
+              </select>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Waveform</label>
+            <div class="param-row">
+              <select class="param-select" id="audio-wave">
+                <option value="sine">Sine</option>
+                <option value="square">Square</option>
+                <option value="sawtooth">Sawtooth</option>
+                <option value="triangle">Triangle</option>
+              </select>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Frequency</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="audio-freq" min="80" max="2000" value="440" step="10">
+              <span class="param-value" id="audio-freq-val">440 Hz</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Volume</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="audio-vol" min="0" max="1" value="0.5" step="0.05">
+              <span class="param-value" id="audio-vol-val">0.50</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <button class="param-btn" id="audio-test">Test Sound</button>
+          </div>
+        </div>
+
+        <!-- Dialog Block -->
+        <div class="block-content" data-block="dialog">
+          <div class="block-title">Dialog</div>
+          <div class="param-group">
+            <label class="param-label">Text</label>
+            <div class="param-row">
+              <textarea class="param-textarea" id="dialog-text" rows="3" placeholder="Enter dialog text...">Hello, welcome to the game!</textarea>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Font Size</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="dialog-font" min="10" max="32" value="14" step="1">
+              <span class="param-value" id="dialog-font-val">14px</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Typing Speed</label>
+            <div class="param-row">
+              <input type="range" class="param-range" id="dialog-speed" min="10" max="200" value="50" step="5">
+              <span class="param-value" id="dialog-speed-val">50ms</span>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Box Style</label>
+            <div class="param-row">
+              <select class="param-select" id="dialog-style">
+                <option value="bottom">Bottom Bar</option>
+                <option value="bubble">Speech Bubble</option>
+                <option value="center">Center Overlay</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rules Block -->
+        <div class="block-content" data-block="rules">
+          <div class="block-title">Rules</div>
+          <div class="param-group">
+            <label class="param-label">Rules</label>
+            <div class="rules-list" id="rules-list">
+              <div class="rule-item">
+                <span class="rule-text">No rules defined yet</span>
+              </div>
+            </div>
+            <button class="param-btn" id="rules-add">+ Add Rule</button>
+          </div>
+          <div class="param-group">
+            <label class="param-label">When</label>
+            <div class="param-row">
+              <select class="param-select" id="rule-when">
+                <option value="collision">Entity collides with</option>
+                <option value="keypress">Key pressed</option>
+                <option value="timer">Timer reaches</option>
+                <option value="click">Entity clicked</option>
+              </select>
+            </div>
+          </div>
+          <div class="param-group">
+            <label class="param-label">Then</label>
+            <div class="param-row">
+              <select class="param-select" id="rule-then">
+                <option value="destroy">Destroy entity</option>
+                <option value="spawn">Spawn entity</option>
+                <option value="effect">Play effect</option>
+                <option value="sound">Play sound</option>
+                <option value="score">Add score</option>
+                <option value="dialog">Show dialog</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Preview -->
+      <main id="preview-area">
+        <div class="preview-header">
+          <span>Live Preview</span>
+          <div class="preview-controls">
+            <button class="preview-btn" id="preview-reset" title="Reset">↺</button>
+            <button class="preview-btn" id="preview-zoom-out" title="Zoom Out">−</button>
+            <span class="zoom-level" id="zoom-display">100%</span>
+            <button class="preview-btn" id="preview-zoom-in" title="Zoom In">+</button>
+          </div>
+        </div>
+        <div class="preview-canvas-wrap" id="canvas-wrap">
+          <canvas id="game-canvas"></canvas>
+        </div>
+      </main>
+    </div>
+
+    <!-- Status Bar -->
+    <footer id="statusbar">
+      <span id="status-mode">Edit Mode</span>
+      <span id="status-entities">Entities: 1</span>
+      <span id="status-mouse">X: 0  Y: 0</span>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
