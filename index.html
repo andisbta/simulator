@@ -4,7 +4,688 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Block Engine — 2D Game Creator</title>
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+/* ===== Block Engine — Design System ===== */
+
+:root {
+  --bg-deep: #08080d;
+  --bg-base: #0e0e14;
+  --bg-surface: #15151e;
+  --bg-elevated: #1c1c28;
+  --bg-hover: #232333;
+
+  --border: #2a2a3a;
+  --border-light: #35354a;
+
+  --text-primary: #e2e2ea;
+  --text-secondary: #8888a0;
+  --text-muted: #55556a;
+
+  --accent: #4a9eff;
+  --accent-dim: #3a7ecc;
+  --accent-glow: rgba(74, 158, 255, 0.15);
+
+  --danger: #ff6b4a;
+  --success: #4aff8b;
+  --warning: #ffc44a;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-sans: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  --transition: 150ms ease;
+}
+
+/* ===== Reset ===== */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== App Layout ===== */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ===== Toolbar ===== */
+#toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.toolbar-left, .toolbar-center, .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+}
+
+.tb-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.tb-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+.tb-btn-play {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+.tb-btn-play:hover {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+.tb-btn-play.playing {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.tb-icon {
+  font-size: 11px;
+}
+
+.tb-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.fps-counter {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 3px 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+}
+
+/* ===== Workspace ===== */
+#workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ===== Sidebar ===== */
+#sidebar {
+  width: 52px;
+  background: var(--bg-base);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.sidebar-header {
+  padding: 10px 0;
+  text-align: center;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+#block-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.block-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 8px;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.block-tab:hover {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.block-tab.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+.block-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ===== Block Panel ===== */
+#block-panel {
+  width: 260px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+#block-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+#block-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#block-panel::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.block-content {
+  display: none;
+  padding: 16px;
+}
+
+.block-content.active {
+  display: block;
+}
+
+.block-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+/* ===== Parameters ===== */
+.param-group {
+  margin-bottom: 14px;
+}
+
+.param-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.param-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.param-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Range slider */
+.param-range {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.param-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-surface);
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+.param-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.param-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-surface);
+  cursor: pointer;
+}
+
+/* Color picker */
+.param-color {
+  -webkit-appearance: none;
+  width: 32px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.param-color::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.param-color::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+/* Select */
+.param-select {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+
+.param-select:hover, .param-select:focus {
+  border-color: var(--border-light);
+}
+
+/* Number input */
+.param-number {
+  width: 80px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.param-number:focus {
+  border-color: var(--accent);
+}
+
+/* Text input */
+.param-text {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.param-text:focus {
+  border-color: var(--accent);
+}
+
+/* Textarea */
+.param-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color var(--transition);
+}
+
+.param-textarea:focus {
+  border-color: var(--accent);
+}
+
+/* Toggle */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all var(--transition);
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--text-muted);
+  border-radius: 50%;
+  transition: all var(--transition);
+}
+
+.toggle input:checked + .toggle-slider {
+  background-color: var(--accent-glow);
+  border-color: var(--accent-dim);
+}
+
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+  background-color: var(--accent);
+}
+
+/* Buttons */
+.param-btn {
+  width: 100%;
+  padding: 7px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.param-btn:hover {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.param-btn-small {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.param-btn-small:hover {
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+/* Entity list */
+.entity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.entity-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.entity-item:hover {
+  background: var(--bg-hover);
+}
+
+.entity-item.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+.entity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Rules list */
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.rule-item {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Asset preview */
+.asset-preview-box {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.asset-preview-box canvas {
+  display: block;
+  margin-top: 8px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* ===== Preview Area ===== */
+#preview-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-base);
+  user-select: none;
+}
+
+.preview-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preview-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.preview-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.zoom-level {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 40px;
+  text-align: center;
+}
+
+.preview-canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 20px;
+}
+
+#game-canvas {
+  background: #0a0a0f;
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 1px var(--border), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== Status Bar ===== */
+#statusbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 26px;
+  padding: 0 16px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+#status-mode {
+  color: var(--accent);
+}
+
+/* ===== Scrollbar global ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+  </style>
 </head>
 <body>
   <div id="app">
@@ -581,6 +1262,744 @@
     </footer>
   </div>
 
-  <script type="module" src="js/app.js"></script>
+  <script>
+// ===== Engine Core =====
+class Engine {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.running = false;
+    this.lastTime = 0;
+    this.fps = 0;
+    this.frameCount = 0;
+    this.fpsTimer = 0;
+    this.zoom = 1;
+
+    this.scene = {
+      bg: '#0a0a0f',
+      grid: true,
+      gridSize: 32,
+      gridColor: '#1a1a25',
+      width: 800,
+      height: 500,
+    };
+
+    this.entities = [];
+    this.mouse = { x: 0, y: 0 };
+
+    this._bindMouse();
+    this.resize();
+  }
+
+  resize() {
+    this.canvas.width = this.scene.width;
+    this.canvas.height = this.scene.height;
+  }
+
+  _bindMouse() {
+    this.canvas.addEventListener('mousemove', (e) => {
+      var rect = this.canvas.getBoundingClientRect();
+      var scaleX = this.canvas.width / rect.width;
+      var scaleY = this.canvas.height / rect.height;
+      this.mouse.x = Math.round((e.clientX - rect.left) * scaleX);
+      this.mouse.y = Math.round((e.clientY - rect.top) * scaleY);
+    });
+  }
+
+  start() {
+    if (this.running) return;
+    this.running = true;
+    this.lastTime = performance.now();
+    this._loop(this.lastTime);
+  }
+
+  stop() {
+    this.running = false;
+  }
+
+  _loop(now) {
+    if (!this.running) return;
+
+    var dt = Math.min((now - this.lastTime) / 1000, 0.05);
+    this.lastTime = now;
+
+    this.frameCount++;
+    this.fpsTimer += dt;
+    if (this.fpsTimer >= 0.5) {
+      this.fps = Math.round(this.frameCount / this.fpsTimer);
+      this.frameCount = 0;
+      this.fpsTimer = 0;
+      if (this.onFpsUpdate) this.onFpsUpdate(this.fps);
+    }
+
+    this.update(dt);
+    this.render();
+
+    requestAnimationFrame((t) => this._loop(t));
+  }
+
+  update(dt) {
+    for (var i = 0; i < this.entities.length; i++) {
+      if (this.entities[i].update) this.entities[i].update(dt);
+    }
+  }
+
+  render() {
+    var ctx = this.ctx;
+    var canvas = this.canvas;
+    var bg = this.scene.bg;
+    var grid = this.scene.grid;
+    var gridSize = this.scene.gridSize;
+    var gridColor = this.scene.gridColor;
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (grid) {
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      for (var x = gridSize; x < canvas.width; x += gridSize) {
+        ctx.moveTo(x + 0.5, 0);
+        ctx.lineTo(x + 0.5, canvas.height);
+      }
+      for (var y = gridSize; y < canvas.height; y += gridSize) {
+        ctx.moveTo(0, y + 0.5);
+        ctx.lineTo(canvas.width, y + 0.5);
+      }
+      ctx.stroke();
+    }
+
+    var sorted = this.entities.slice().sort(function(a, b) { return (a.layer || 0) - (b.layer || 0); });
+    for (var i = 0; i < sorted.length; i++) {
+      if (sorted[i].render) sorted[i].render(ctx);
+    }
+  }
+}
+
+// ===== Asset Generator =====
+class AssetGenerator {
+  constructor() {
+    this.config = {
+      shape: 'rect',
+      size: 32,
+      fill: '#4a9eff',
+      stroke: true,
+      strokeColor: '#e8e8e8',
+      strokeWidth: 1,
+      opacity: 1,
+      seed: 42,
+    };
+  }
+
+  draw(ctx, x, y, overrides) {
+    overrides = overrides || {};
+    var c = Object.assign({}, this.config, overrides);
+    var half = c.size / 2;
+
+    ctx.save();
+    ctx.globalAlpha = c.opacity;
+    ctx.translate(x, y);
+
+    ctx.fillStyle = c.fill;
+    ctx.strokeStyle = c.strokeColor;
+    ctx.lineWidth = c.strokeWidth;
+
+    ctx.beginPath();
+
+    switch (c.shape) {
+      case 'rect':
+        ctx.rect(-half, -half, c.size, c.size);
+        break;
+      case 'circle':
+        ctx.arc(0, 0, half, 0, Math.PI * 2);
+        break;
+      case 'triangle':
+        ctx.moveTo(0, -half);
+        ctx.lineTo(half, half);
+        ctx.lineTo(-half, half);
+        ctx.closePath();
+        break;
+      case 'diamond':
+        ctx.moveTo(0, -half);
+        ctx.lineTo(half, 0);
+        ctx.lineTo(0, half);
+        ctx.lineTo(-half, 0);
+        ctx.closePath();
+        break;
+      case 'hexagon':
+        for (var i = 0; i < 6; i++) {
+          var angle = (Math.PI / 3) * i - Math.PI / 2;
+          var px = Math.cos(angle) * half;
+          var py = Math.sin(angle) * half;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        break;
+      case 'star':
+        var spikes = 5;
+        var outerR = half;
+        var innerR = half * 0.4;
+        for (var i = 0; i < spikes * 2; i++) {
+          var r = i % 2 === 0 ? outerR : innerR;
+          var angle = (Math.PI / spikes) * i - Math.PI / 2;
+          var px = Math.cos(angle) * r;
+          var py = Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        break;
+    }
+
+    ctx.fill();
+    if (c.stroke && c.strokeWidth > 0) {
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  renderPreview(canvas) {
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    this.draw(ctx, canvas.width / 2, canvas.height / 2);
+  }
+}
+
+// ===== Entity =====
+var entityIdCounter = 0;
+
+class Entity {
+  constructor(name, assetGenerator) {
+    this.id = 'entity_' + (entityIdCounter++);
+    this.name = name;
+    this.x = 400;
+    this.y = 250;
+    this.layer = 1;
+    this.tag = 'player';
+    this.asset = assetGenerator;
+    this.assetOverrides = {};
+
+    this.animTime = 0;
+    this.animation = {
+      idle: 'pulse',
+      speed: 1,
+      easing: 'ease-out',
+      loop: true,
+    };
+  }
+
+  update(dt) {
+    this.animTime += dt * this.animation.speed;
+  }
+
+  render(ctx) {
+    ctx.save();
+
+    var scale = 1;
+    var offsetY = 0;
+    var t = this.animTime;
+
+    switch (this.animation.idle) {
+      case 'pulse':
+        scale = 1 + Math.sin(t * 3) * 0.05;
+        break;
+      case 'breathe':
+        scale = 1 + Math.sin(t * 2) * 0.08;
+        break;
+      case 'float':
+        offsetY = Math.sin(t * 2) * 4;
+        break;
+      case 'rotate':
+        ctx.translate(this.x, this.y + offsetY);
+        ctx.rotate(t * 2);
+        ctx.scale(scale, scale);
+        this.asset.draw(ctx, 0, 0, this.assetOverrides);
+        ctx.restore();
+        return;
+    }
+
+    ctx.translate(this.x, this.y + offsetY);
+    ctx.scale(scale, scale);
+    this.asset.draw(ctx, 0, 0, this.assetOverrides);
+
+    ctx.restore();
+  }
+}
+
+// ===== Block Manager =====
+class BlockManager {
+  constructor() {
+    this.tabs = document.querySelectorAll('.block-tab');
+    this.panels = document.querySelectorAll('.block-content');
+    this.activeBlock = 'scene';
+    this._bind();
+  }
+
+  _bind() {
+    var self = this;
+    this.tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        self.setActive(tab.dataset.block);
+      });
+    });
+  }
+
+  setActive(blockName) {
+    this.activeBlock = blockName;
+    this.tabs.forEach(function(tab) {
+      tab.classList.toggle('active', tab.dataset.block === blockName);
+    });
+    this.panels.forEach(function(panel) {
+      panel.classList.toggle('active', panel.dataset.block === blockName);
+    });
+  }
+}
+
+// ===== Parameter Bindings =====
+class ParamBindings {
+  constructor(engine, assetGenerator, entities) {
+    this.engine = engine;
+    this.asset = assetGenerator;
+    this.entities = entities;
+
+    this._bindScene();
+    this._bindAssets();
+    this._bindEntity();
+    this._bindPhysics();
+    this._bindControls();
+    this._bindAnimation();
+    this._bindEffects();
+    this._bindAudio();
+    this._bindDialog();
+  }
+
+  _bindRange(id, displayId, format, callback) {
+    var input = document.getElementById(id);
+    var display = document.getElementById(displayId);
+    if (!input) return;
+
+    var update = function() {
+      if (display) display.textContent = format(input.value);
+      callback(parseFloat(input.value));
+    };
+
+    input.addEventListener('input', update);
+    update();
+  }
+
+  _bindColor(id, displayId, callback) {
+    var input = document.getElementById(id);
+    var display = document.getElementById(displayId);
+    if (!input) return;
+
+    var update = function() {
+      if (display) display.textContent = input.value;
+      callback(input.value);
+    };
+
+    input.addEventListener('input', update);
+    update();
+  }
+
+  _bindCheck(id, callback) {
+    var input = document.getElementById(id);
+    if (!input) return;
+    input.addEventListener('change', function() { callback(input.checked); });
+    callback(input.checked);
+  }
+
+  _bindSelect(id, callback) {
+    var input = document.getElementById(id);
+    if (!input) return;
+    input.addEventListener('change', function() { callback(input.value); });
+    callback(input.value);
+  }
+
+  _bindScene() {
+    var eng = this.engine;
+
+    this._bindColor('scene-bg', 'scene-bg-val', function(v) { eng.scene.bg = v; });
+    this._bindCheck('scene-grid', function(v) { eng.scene.grid = v; });
+    this._bindRange('scene-grid-size', 'scene-grid-size-val', function(v) { return v + 'px'; }, function(v) { eng.scene.gridSize = v; });
+    this._bindColor('scene-grid-color', 'scene-grid-color-val', function(v) { eng.scene.gridColor = v; });
+
+    var widthInput = document.getElementById('scene-width');
+    var heightInput = document.getElementById('scene-height');
+
+    if (widthInput) {
+      widthInput.addEventListener('change', function() {
+        eng.scene.width = parseInt(widthInput.value) || 800;
+        eng.resize();
+      });
+    }
+
+    if (heightInput) {
+      heightInput.addEventListener('change', function() {
+        eng.scene.height = parseInt(heightInput.value) || 500;
+        eng.resize();
+      });
+    }
+  }
+
+  _bindAssets() {
+    var asset = this.asset;
+    var entities = this.entities;
+    var previewCanvas = document.getElementById('asset-preview');
+
+    var refreshPreview = function() {
+      if (previewCanvas) asset.renderPreview(previewCanvas);
+      if (entities[0]) {
+        entities[0].assetOverrides = Object.assign({}, asset.config);
+      }
+    };
+
+    this._bindSelect('asset-shape', function(v) { asset.config.shape = v; refreshPreview(); });
+    this._bindRange('asset-size', 'asset-size-val', function(v) { return v + 'px'; }, function(v) { asset.config.size = v; refreshPreview(); });
+    this._bindColor('asset-fill', 'asset-fill-val', function(v) { asset.config.fill = v; refreshPreview(); });
+    this._bindCheck('asset-stroke', function(v) { asset.config.stroke = v; refreshPreview(); });
+    this._bindColor('asset-stroke-color', 'asset-stroke-color-val', function(v) { asset.config.strokeColor = v; refreshPreview(); });
+    this._bindRange('asset-stroke-width', 'asset-stroke-width-val', function(v) { return v + 'px'; }, function(v) { asset.config.strokeWidth = v; refreshPreview(); });
+    this._bindRange('asset-opacity', 'asset-opacity-val', function(v) { return parseFloat(v).toFixed(1); }, function(v) { asset.config.opacity = v; refreshPreview(); });
+
+    var seedInput = document.getElementById('asset-seed');
+    var seedRand = document.getElementById('asset-seed-rand');
+    if (seedInput) {
+      seedInput.addEventListener('change', function() {
+        asset.config.seed = parseInt(seedInput.value) || 0;
+        refreshPreview();
+      });
+    }
+    if (seedRand) {
+      seedRand.addEventListener('click', function() {
+        var newSeed = Math.floor(Math.random() * 10000);
+        if (seedInput) seedInput.value = newSeed;
+        asset.config.seed = newSeed;
+        refreshPreview();
+      });
+    }
+
+    refreshPreview();
+  }
+
+  _bindEntity() {
+    var entities = this.entities;
+    var nameInput = document.getElementById('entity-name');
+    var xInput = document.getElementById('entity-x');
+    var yInput = document.getElementById('entity-y');
+    var layerInput = document.getElementById('entity-layer');
+
+    var getActive = function() { return entities[0]; };
+
+    if (nameInput) {
+      nameInput.addEventListener('input', function() {
+        var e = getActive();
+        if (e) e.name = nameInput.value;
+      });
+    }
+
+    if (xInput) {
+      xInput.addEventListener('input', function() {
+        var e = getActive();
+        if (e) e.x = parseInt(xInput.value) || 0;
+      });
+    }
+
+    if (yInput) {
+      yInput.addEventListener('input', function() {
+        var e = getActive();
+        if (e) e.y = parseInt(yInput.value) || 0;
+      });
+    }
+
+    if (layerInput) {
+      layerInput.addEventListener('input', function() {
+        var e = getActive();
+        if (e) e.layer = parseInt(layerInput.value) || 0;
+      });
+    }
+
+    this._bindSelect('entity-tag', function(v) {
+      var e = getActive();
+      if (e) e.tag = v;
+    });
+  }
+
+  _bindPhysics() {
+    if (!this.engine.physics) {
+      this.engine.physics = { enabled: true, gravity: 980, friction: 0.1, bounce: 0.3, mass: 1, collision: 'aabb' };
+    }
+    var p = this.engine.physics;
+
+    this._bindCheck('phys-enable', function(v) { p.enabled = v; });
+    this._bindRange('phys-gravity', 'phys-gravity-val', function(v) { return Math.round(v); }, function(v) { p.gravity = v; });
+    this._bindRange('phys-friction', 'phys-friction-val', function(v) { return parseFloat(v).toFixed(2); }, function(v) { p.friction = v; });
+    this._bindRange('phys-bounce', 'phys-bounce-val', function(v) { return parseFloat(v).toFixed(2); }, function(v) { p.bounce = v; });
+    this._bindRange('phys-mass', 'phys-mass-val', function(v) { return parseFloat(v).toFixed(1); }, function(v) { p.mass = v; });
+    this._bindSelect('phys-collision', function(v) { p.collision = v; });
+  }
+
+  _bindControls() {
+    if (!this.engine.controls) {
+      this.engine.controls = { mode: 'topdown', speed: 200, jump: 400, dash: false };
+    }
+    var c = this.engine.controls;
+
+    this._bindSelect('ctrl-mode', function(v) { c.mode = v; });
+    this._bindRange('ctrl-speed', 'ctrl-speed-val', function(v) { return Math.round(v); }, function(v) { c.speed = v; });
+    this._bindRange('ctrl-jump', 'ctrl-jump-val', function(v) { return Math.round(v); }, function(v) { c.jump = v; });
+    this._bindCheck('ctrl-dash', function(v) { c.dash = v; });
+  }
+
+  _bindAnimation() {
+    var entities = this.entities;
+    var getActive = function() { return entities[0]; };
+
+    this._bindSelect('anim-idle', function(v) {
+      var e = getActive();
+      if (e) e.animation.idle = v;
+    });
+
+    this._bindRange('anim-speed', 'anim-speed-val', function(v) { return parseFloat(v).toFixed(1) + 'x'; }, function(v) {
+      var e = getActive();
+      if (e) e.animation.speed = v;
+    });
+
+    this._bindSelect('anim-easing', function(v) {
+      var e = getActive();
+      if (e) e.animation.easing = v;
+    });
+
+    this._bindCheck('anim-loop', function(v) {
+      var e = getActive();
+      if (e) e.animation.loop = v;
+    });
+  }
+
+  _bindEffects() {
+    if (!this.engine.effects) {
+      this.engine.effects = { particles: false, count: 20, lifetime: 1, color: '#4a9eff', shake: false };
+    }
+    var fx = this.engine.effects;
+
+    this._bindCheck('fx-particles', function(v) { fx.particles = v; });
+    this._bindRange('fx-count', 'fx-count-val', function(v) { return Math.round(v); }, function(v) { fx.count = v; });
+    this._bindRange('fx-lifetime', 'fx-lifetime-val', function(v) { return parseFloat(v).toFixed(1) + 's'; }, function(v) { fx.lifetime = v; });
+    this._bindColor('fx-color', 'fx-color-val', function(v) { fx.color = v; });
+    this._bindCheck('fx-shake', function(v) { fx.shake = v; });
+  }
+
+  _bindAudio() {
+    if (!this.engine.audio) {
+      this.engine.audio = { type: 'jump', wave: 'sine', freq: 440, vol: 0.5 };
+    }
+    var a = this.engine.audio;
+
+    this._bindSelect('audio-type', function(v) { a.type = v; });
+    this._bindSelect('audio-wave', function(v) { a.wave = v; });
+    this._bindRange('audio-freq', 'audio-freq-val', function(v) { return Math.round(v) + ' Hz'; }, function(v) { a.freq = v; });
+    this._bindRange('audio-vol', 'audio-vol-val', function(v) { return parseFloat(v).toFixed(2); }, function(v) { a.vol = v; });
+
+    var self = this;
+    var testBtn = document.getElementById('audio-test');
+    if (testBtn) {
+      testBtn.addEventListener('click', function() { self._playTestSound(); });
+    }
+  }
+
+  _playTestSound() {
+    var a = this.engine.audio;
+    try {
+      var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+
+      osc.type = a.wave;
+      osc.frequency.value = a.freq;
+      gain.gain.value = a.vol;
+
+      var now = audioCtx.currentTime;
+      switch (a.type) {
+        case 'jump':
+          osc.frequency.setValueAtTime(a.freq, now);
+          osc.frequency.exponentialRampToValueAtTime(a.freq * 1.5, now + 0.1);
+          gain.gain.setValueAtTime(a.vol, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          break;
+        case 'hit':
+          osc.frequency.setValueAtTime(a.freq, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+          gain.gain.setValueAtTime(a.vol, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          break;
+        case 'pickup':
+          osc.frequency.setValueAtTime(a.freq, now);
+          osc.frequency.setValueAtTime(a.freq * 1.25, now + 0.08);
+          osc.frequency.setValueAtTime(a.freq * 1.5, now + 0.16);
+          gain.gain.setValueAtTime(a.vol, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          break;
+        case 'blip':
+          gain.gain.setValueAtTime(a.vol, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+          break;
+      }
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } catch (e) {}
+  }
+
+  _bindDialog() {
+    if (!this.engine.dialog) {
+      this.engine.dialog = { text: 'Hello, welcome to the game!', fontSize: 14, speed: 50, style: 'bottom' };
+    }
+    var d = this.engine.dialog;
+
+    var textInput = document.getElementById('dialog-text');
+    if (textInput) {
+      textInput.addEventListener('input', function() { d.text = textInput.value; });
+    }
+
+    this._bindRange('dialog-font', 'dialog-font-val', function(v) { return Math.round(v) + 'px'; }, function(v) { d.fontSize = v; });
+    this._bindRange('dialog-speed', 'dialog-speed-val', function(v) { return Math.round(v) + 'ms'; }, function(v) { d.speed = v; });
+    this._bindSelect('dialog-style', function(v) { d.style = v; });
+  }
+}
+
+// ===== App Init =====
+var canvas = document.getElementById('game-canvas');
+var engine = new Engine(canvas);
+
+var assetGen = new AssetGenerator();
+
+var player = new Entity('Player', assetGen);
+player.x = 400;
+player.y = 250;
+engine.entities.push(player);
+
+var blockManager = new BlockManager();
+var bindings = new ParamBindings(engine, assetGen, engine.entities);
+
+engine.onFpsUpdate = function(fps) {
+  document.getElementById('fps-display').textContent = fps + ' FPS';
+};
+
+canvas.addEventListener('mousemove', function() {
+  document.getElementById('status-mouse').textContent =
+    'X: ' + engine.mouse.x + '  Y: ' + engine.mouse.y;
+});
+
+var updateEntityCount = function() {
+  document.getElementById('status-entities').textContent =
+    'Entities: ' + engine.entities.length;
+};
+
+var playBtn = document.getElementById('btn-play');
+var playIcon = document.getElementById('play-icon');
+var statusMode = document.getElementById('status-mode');
+
+var isPlaying = false;
+
+playBtn.addEventListener('click', function() {
+  isPlaying = !isPlaying;
+  playBtn.classList.toggle('playing', isPlaying);
+  playIcon.textContent = isPlaying ? '\u25A0' : '\u25B6';
+
+  var textNodes = Array.prototype.filter.call(playBtn.childNodes, function(n) { return n.nodeType === 3; });
+  if (textNodes.length > 0) {
+    textNodes[textNodes.length - 1].textContent = isPlaying ? ' Stop' : ' Play';
+  }
+
+  statusMode.textContent = isPlaying ? 'Play Mode' : 'Edit Mode';
+
+  if (isPlaying) {
+    engine.start();
+  } else {
+    engine.stop();
+  }
+});
+
+var zoomLevel = 100;
+var zoomDisplay = document.getElementById('zoom-display');
+
+var applyZoom = function() {
+  canvas.style.transform = 'scale(' + (zoomLevel / 100) + ')';
+  zoomDisplay.textContent = zoomLevel + '%';
+};
+
+document.getElementById('preview-zoom-in').addEventListener('click', function() {
+  zoomLevel = Math.min(200, zoomLevel + 10);
+  applyZoom();
+});
+
+document.getElementById('preview-zoom-out').addEventListener('click', function() {
+  zoomLevel = Math.max(30, zoomLevel - 10);
+  applyZoom();
+});
+
+document.getElementById('preview-reset').addEventListener('click', function() {
+  zoomLevel = 100;
+  applyZoom();
+  player.x = Math.round(engine.scene.width / 2);
+  player.y = Math.round(engine.scene.height / 2);
+  document.getElementById('entity-x').value = player.x;
+  document.getElementById('entity-y').value = player.y;
+});
+
+document.getElementById('btn-save').addEventListener('click', function() {
+  var state = {
+    scene: engine.scene,
+    physics: engine.physics,
+    controls: engine.controls,
+    effects: engine.effects,
+    audio: engine.audio,
+    dialog: engine.dialog,
+    asset: assetGen.config,
+    entities: engine.entities.map(function(e) {
+      return {
+        name: e.name, x: e.x, y: e.y, layer: e.layer,
+        tag: e.tag, animation: e.animation, assetOverrides: e.assetOverrides,
+      };
+    }),
+  };
+
+  var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'block-engine-project.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btn-export').addEventListener('click', function() {
+  var state = {
+    scene: engine.scene,
+    physics: engine.physics,
+    controls: engine.controls,
+    effects: engine.effects,
+    audio: engine.audio,
+    dialog: engine.dialog,
+    asset: assetGen.config,
+    entities: engine.entities.map(function(e) {
+      return {
+        name: e.name, x: e.x, y: e.y, layer: e.layer,
+        tag: e.tag, animation: e.animation,
+      };
+    }),
+  };
+
+  console.log('Block Engine Export:', JSON.stringify(state, null, 2));
+  alert('Project exported to console. Check DevTools (F12).');
+});
+
+engine.start();
+updateEntityCount();
+  </script>
 </body>
 </html>
